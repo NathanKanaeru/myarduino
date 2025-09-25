@@ -1,4 +1,3 @@
-// Panggil ini dari loop() atau saat ingin menampilkan nama masjid + running text
 void tampilNamaMasjid() {
   // teks statis di atas (tengah)
   const char topText[] = "MASJID AL-HUDA";
@@ -6,58 +5,52 @@ void tampilNamaMasjid() {
   // running text di bawah (beri spasi di akhir agar ada jeda)
   const char bottomText[] = "SMK BHINNEKA KARYA SIMO   ";
 
-  // buffer aman (maks panjang disesuaikan)
+  // buffer aman
   char bufTop[32];
   char bufBot[128];
-
-  // salin aman ke buffer
   strncpy(bufTop, topText, sizeof(bufTop) - 1);
   bufTop[sizeof(bufTop) - 1] = '\0';
   strncpy(bufBot, bottomText, sizeof(bufBot) - 1);
   bufBot[sizeof(bufBot) - 1] = '\0';
 
-  // pilih font untuk tulisan
   dmd.selectFont(SystemFont5x7);
-
-  // clear layar sekali sebelum start
   dmd.clearScreen(true);
 
-  // hitung posisi X supaya teks atas rata tengah (asumsi lebar char ~6 px: 5+1 spacing)
+  // hitung posisi X supaya teks atas rata tengah
   int topLen = strlen(bufTop);
-  int topWidth = topLen * 6;
+  int topWidth = topLen * 6; // lebar karakter SystemFont5x7 ≈ 6 px
   int posX = (64 - topWidth) / 2;
   if (posX < 0) posX = 0;
 
-  // gambar teks atas & garis pemisah sekali (akan digambar ulang tiap step)
+  // gambar teks statis atas
   dmd.drawString(posX, 0, bufTop, topLen, 0);
-  dmd.drawLine(0, 7, 63, 7, 1); // garis horizontal pemisah
+  dmd.drawLine(0, 7, 63, 7, 1); // garis pemisah
 
-  // siapkan marquee untuk baris bawah (mulai dari kolom 64 sehingga muncul dari kanan)
+  // siapkan marquee teks bawah
   int pj = strlen(bufBot) + 1;
-  dmd.drawMarquee(bufBot, pj, 64, 9); // y=9 agar berada di baris bawah (untuk 16px tinggi)
+  dmd.drawMarquee(bufBot, pj, 64, 9);
+
+  // --- variabel kecepatan lokal ---
+  unsigned long scrollDelay = 40UL; // ms per step scroll
 
   unsigned long timer = millis();
   bool selesai = false;
 
-  // loop marquee — tiap kali step, kita *gambar ulang* teks statis di atas
+  // loop marquee — redraw teks statis setiap step
   while (!selesai) {
-    if ((millis() - timer) >= kecepatan) {  // gunakan variabel 'kecepatan' yang sudah ada di sketch
+    if ((millis() - timer) >= scrollDelay) {
       selesai = dmd.stepMarquee(-1, 0);
 
-      // sangat penting: gambar ulang elemen statis agar tidak tertimpa marquee
+      // redraw statis supaya tidak tertimpa
       dmd.selectFont(SystemFont5x7);
       dmd.drawString(posX, 0, bufTop, topLen, 0);
       dmd.drawLine(0, 7, 63, 7, 1);
 
       timer = millis();
     }
-    // biarkan sistem lain (interrupt) jalan
-    yield();
+    yield(); // biar sistem lain jalan
   }
 
-  // jeda kecil setelah selesai 1 kali scroll
   delay(1000);
-
-  // bersihkan layar kalau perlu
   dmd.clearScreen(true);
 }
