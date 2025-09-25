@@ -1,56 +1,42 @@
-void tampilNamaMasjid() {
-  // teks statis di atas (tengah)
-  const char topText[] = "MASJID AL-HUDA";
-
-  // running text di bawah (beri spasi di akhir agar ada jeda)
-  const char bottomText[] = "SMK BHINNEKA KARYA SIMO   ";
-
-  // buffer aman
-  char bufTop[32];
-  char bufBot[128];
-  strncpy(bufTop, topText, sizeof(bufTop) - 1);
-  bufTop[sizeof(bufTop) - 1] = '\0';
-  strncpy(bufBot, bottomText, sizeof(bufBot) - 1);
-  bufBot[sizeof(bufBot) - 1] = '\0';
-
+//tampilkan tulisan diam-statis-nama masjid dan running text sekolah
+  
+  // Tampilkan nama masjid statis di baris atas
+  Teks = "MASJID AL-HUDA";                    //baris atas - nama masjid statis
+  pj = Teks.length() + 1;
+  char tampil_masjid[pj];
+  Teks.toCharArray(tampil_masjid, pj);
   dmd.selectFont(SystemFont5x7);
-  dmd.clearScreen(true);
-
-  // hitung posisi X supaya teks atas rata tengah
-  int topLen = strlen(bufTop);
-  int topWidth = topLen * 6; // lebar karakter SystemFont5x7 ≈ 6 px
-  int posX = (64 - topWidth) / 2;
-  if (posX < 0) posX = 0;
-
-  // gambar teks statis atas
-  dmd.drawString(posX, 0, bufTop, topLen, 0);
-  dmd.drawLine(0, 7, 63, 7, 1); // garis pemisah
-
-  // siapkan marquee teks bawah
-  int pj = strlen(bufBot) + 1;
-  dmd.drawMarquee(bufBot, pj, 64, 9);
-
-  // --- variabel kecepatan lokal ---
-  unsigned long scrollDelay = 40UL; // ms per step scroll
-
-  unsigned long timer = millis();
-  bool selesai = false;
-
-  // loop marquee — redraw teks statis setiap step
-  while (!selesai) {
-    if ((millis() - timer) >= scrollDelay) {
-      selesai = dmd.stepMarquee(-1, 0);
-
-      // redraw statis supaya tidak tertimpa
+  dmd.drawString(5, 0, tampil_masjid, pj, 0); //koordinat tampilan nama masjid
+  
+  // Setup running text untuk nama sekolah di baris bawah
+  Teks = "SMK BHINNEKA KARYA SIMO";           //running text nama sekolah
+  pj = Teks.length() + 1;
+  char tampil_sekolah[pj];
+  Teks.toCharArray(tampil_sekolah, pj);
+  
+  dmd.drawMarquee(tampil_sekolah, pj, 63, 9);  //mulai marquee di baris bawah (y=9)
+  
+  long timer_sekolah = millis();
+  boolean ret_sekolah = false;
+  int durasi_tampil = 0;
+  
+  // Running text selama 8 detik dengan nama masjid tetap statis di atas
+  while (durasi_tampil < 8000) {
+    if ((timer_sekolah + 30) < millis()) {  //kecepatan running text
+      ret_sekolah = dmd.stepMarquee(-1, 0);
+      timer_sekolah = millis();
+      durasi_tampil += 30;
+      
+      // Pertahankan nama masjid tetap tampil di atas
       dmd.selectFont(SystemFont5x7);
-      dmd.drawString(posX, 0, bufTop, topLen, 0);
-      dmd.drawLine(0, 7, 63, 7, 1);
-
-      timer = millis();
+      dmd.drawString(5, 0, tampil_masjid, strlen(tampil_masjid)+1, 0);
+      
+      // Reset marquee jika sudah selesai untuk loop kontinyu
+      if (ret_sekolah) {
+        dmd.drawMarquee(tampil_sekolah, strlen(tampil_sekolah)+1, 63, 9);
+        ret_sekolah = false;
+      }
     }
-    yield(); // biar sistem lain jalan
   }
-
-  delay(1000);
+  
   dmd.clearScreen(true);
-}
